@@ -102,8 +102,7 @@ def stream_graph_updates(user_input: str):
          ):
         if "messages" in event:
             event["messages"][-1].pretty_print()
-        # for value in event.values():
-        #     print("Assistant:", value["messages"][-1].content)
+
 
 def main():
     while True:

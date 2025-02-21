@@ -18,8 +18,7 @@ from langchain_core.runnables.graph import CurveStyle, MermaidDrawMethod, NodeSt
 
 
 # Configuration
-# PROJECT_ID = os.environ.get("PROJECT_ID")
-PROJECT_ID = "samets-ai-playground"
+PROJECT_ID = os.environ.get("PROJECT_ID")
 LOCATION = "us-central1"
 MODEL_NAME = "gemini-2.0-flash-exp"
 

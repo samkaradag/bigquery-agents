@@ -18,13 +18,20 @@ This project implements a conversational agent powered by LangGraph and Google V
 -   `PROJECT_ID` environment variable set to your GCP project ID or hardcoded in the script.
 -   Poetry for dependency management
 
-## Installation
+## Installation using pip
+1.  Install the pypi package:
+
+    ```bash
+    pip install bigquery_agents
+    ```
+
+## Installation via Github
 
 1.  Clone the repository:
 
     ```bash
-    git clone <repository_url>
-    cd <repository_directory>
+    git clone https://github.com/samkaradag/bigquery-agents.git
+    cd bigquery-agents
     ```
 
 2.  Install dependencies using Poetry:
@@ -33,22 +40,25 @@ This project implements a conversational agent powered by LangGraph and Google V
     poetry install
     ```
 
-3.  Set your GCP project ID:
+
+## Usage
+
+1.  Set your GCP project ID:
 
     ```bash
     export PROJECT_ID="your-gcp-project-id"
     ```
     Or change the PROJECT_ID variable inside the python script.
 
-4.  Authenticate with GCP:
+2.  Authenticate with GCP:
 
     ```bash
     gcloud auth application-default login
     ```
 
-## Usage
 
-Run the agent using the `bq_fix` script defined in `poetry.toml`:
+3.  Run the agent using the `bq_fix`:
 
-```bash
-poetry run bq_fix
+    ```bash
+    bq_fix
+    ```

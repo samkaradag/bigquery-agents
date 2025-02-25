@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
+# This script defines a basic agent that can fix BigQuery queries by retrieving bigquery job. This script defines tools by extending BaseTool and Pydantic schemas.
+# Please check bq_fix for a more comprehensive version that also retrieves table schemas and uses decorators for tool definitions
+    
 import os
 import sys
 from typing import Annotated, Optional, Type

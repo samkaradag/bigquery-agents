@@ -15,17 +15,16 @@
 
 import os
 import sys
+import re
 from typing import Annotated, Optional, Type, List, Dict, Any
 from langchain_google_vertexai import ChatVertexAI
+from langchain_core.tools import tool
 from langchain_core.messages import BaseMessage, HumanMessage, ToolMessage
 from google.cloud import bigquery
 from typing_extensions import TypedDict
-from langchain.tools import BaseTool
-from pydantic import BaseModel, Field
-from langgraph.graph import StateGraph, START, END
-from langgraph.types import Command
+from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
-from langgraph.prebuilt import ToolNode, tools_condition
+from langgraph.prebuilt import ToolNode
 from langgraph.checkpoint.memory import MemorySaver
 # from PIL import Image, ImageDraw
 from langchain_core.runnables.graph import CurveStyle, MermaidDrawMethod, NodeStyles
@@ -37,52 +36,32 @@ MODEL_NAME = "gemini-2.0-flash-exp"
 
 class State(TypedDict):
     messages: Annotated[list, add_messages]
-    tables: Optional[List[Dict[str, Any]]] = None
-    query: Optional[str] = None
-    error: Optional[str] = None
-    job_id: Optional[str] = None
+    # tables: Optional[List[Dict[str, Any]]] = None
+    # query: Optional[str] = None
+    # error: Optional[str] = None
+    # job_id: Optional[str] = None
 
 graph_builder = StateGraph(State)
 memory = MemorySaver()
-
-
-# Define Input Schema for the tool
-class BigQueryJobDetailsInput(BaseModel):
-    job_id: str = Field(..., description="The ID of the BigQuery job to retrieve details for.")
-
-# Define the Custom Tool
-class BigQueryJobDetailsTool(BaseTool):
-    name: str = "bigquery_job_details"  # Add type annotation :str
-    description: str = "Retrieves details of a BigQuery job, including query and errors."  # Add type annotation :str
-    args_schema: type[BigQueryJobDetailsInput] = BigQueryJobDetailsInput
-
-    def _run(self, job_id: str) -> str:
-        """Retrieves details of a BigQuery job."""
-        bigquery_client = bigquery.Client(project=PROJECT_ID)
-        try:
-            job = bigquery_client.get_job(job_id)
-            query = job.query
-            errors = job.error_result
-            if errors:
-                error_message = f"Error: {errors['message']}"
-            else:
-                error_message = "No errors."
-            return f"Query: {query}\n{error_message}"
-        except Exception as e:
-            return f"Error getting job details: {e}"
         
-# Define Input Schema for the table schema tool
-class BigQueryTableSchemaInput(BaseModel):
-    dataset_id: str = Field(..., description="The ID of the dataset containing the table.")
-    table_id: str = Field(..., description="The ID of the table to retrieve the schema for.")
-
-# Define the Custom Tool for retrieving table schema
-class BigQueryTableSchemaTool(BaseTool):
-    name: str = "bigquery_table_schema"
-    description: str = "Retrieves the schema of a BigQuery table, including column names and data types."
-    args_schema: Type[BigQueryTableSchemaInput] = BigQueryTableSchemaInput
-
-    def _run(self, dataset_id: str, table_id: str) -> str:
+@tool
+def bigquery_job_details_tool(job_id: str) -> str:
+    """Retrieves details of a BigQuery job."""
+    bigquery_client = bigquery.Client(project=PROJECT_ID)
+    try:
+        job = bigquery_client.get_job(job_id)
+        query = job.query
+        errors = job.error_result
+        if errors:
+            error_message = f"Error: {errors['message']}"
+        else:
+            error_message = "No errors."
+        return f"Query: {query}\n{error_message}"
+    except Exception as e:
+        return f"Error getting job details: {e}"
+        
+@tool   
+def bigquery_table_schema_tool(dataset_id: str, table_id: str) -> str:
         """Retrieves the schema of a BigQuery table."""
         bigquery_client = bigquery.Client(project=PROJECT_ID)
         try:
@@ -101,7 +80,7 @@ def suggest_fixes(state: State):
     messages = state["messages"]
     tool_result_messages = [msg.content for msg in messages if isinstance(msg, ToolMessage)]
 
-    print(f"Fix tool messages/: {tool_result_messages}")
+    print(f"Previous tool messages: {tool_result_messages}")
 
     if tool_result_messages:
         # tool_result = tool_result_message.content
@@ -110,6 +89,7 @@ def suggest_fixes(state: State):
                 content=f"""Based on the following BigQuery job details, suggest possible fixes, especially if there are errors:
                 \n\n{tool_result_messages}
                 \n\nIf the error is related to table schemas or data types and column data types are not included above, consider using the `bigquery_table_schema` tool to get more information about the relevant tables.
+                \n\nIf the schema is already provided do not use the `bigquery_table_schema` tool.
                 """
             )
         ]
@@ -130,10 +110,6 @@ def should_continue(state):
         return 'TOOLS'  # More descriptive name
 
 llm = ChatVertexAI(model=MODEL_NAME, google_project=PROJECT_ID, location=LOCATION)
-
-# Instantiate the tools
-bigquery_job_details_tool = BigQueryJobDetailsTool()
-bigquery_table_schema_tool = BigQueryTableSchemaTool()
 
 # Bind LangChain tools.
 tools = [bigquery_job_details_tool, bigquery_table_schema_tool]

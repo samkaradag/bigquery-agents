@@ -2,6 +2,10 @@
 
 This project implements a conversational agent powered by LangGraph and Google Vertex AI's Gemini model to troubleshoot BigQuery jobs. It utilizes custom tools to fetch job details and table schemas, enabling the agent to provide informed suggestions for fixing errors.
 
+## Scripts
+- bq_fix is an AI agent uses Gemini 2.0 Flash. Agent suggests fixes to a problematic query by getting Bigquery job id from user. It uses BigQueryJobDetailsTool and BigQueryTableSchemaTool to get the query and error text and suggests some resolutions. If the error includes data type related ones, it uses BigQueryTableSchemaTool tool to get the table schema for more accurate suggestions.
+- bq_fix_basic is a basic version which does not have the schema lookup functionality. can be useful to resolve syntax issues but not that efficient if the error is related to a column data type compared to bq_fix.
+
 ## Features
 
 -   **BigQuery Job Details Retrieval:** Fetches details of a BigQuery job, including the query and any error messages.
@@ -62,3 +66,6 @@ This project implements a conversational agent powered by LangGraph and Google V
     ```bash
     bq_fix
     ```
+
+
+![Langgraph graph visualization](image.png)

@@ -1,11 +1,12 @@
 [project]
-name = "bigquery-agents"
-version = "0.1.1"
+name = "bigquery_agents"
+version = "0.1.13"
 description = ""
 authors = [
     {name = "sametkaradag",email = "sametkaradag@gmail.com"}
 ]
 readme = "README.md"
+license = "Google"
 requires-python = ">=3.12,<4.0"
 dependencies = [
     "google-cloud-bigquery (>=3.29.0,<4.0.0)",
@@ -14,10 +15,16 @@ dependencies = [
     "langchain-google-vertexai (>=2.0.12,<3.0.0)",
     "ipython (>=8.31.0,<9.0.0)",
 ]
+packages = [
+    {include = "bq_fix", from = "src/bigquery_agents"},
+    {include = "bq_fix_basic", from = "src/bigquery_agents"},
+    {include = "bq_medic", from = "src/bigquery_agents"}
+]
 
 [tool.poetry.scripts]
-bq_fix_basic = "bq_job_troubleshoot_basic:main"
-bq_fix = "bq_job_troubleshoot_w_schema_lookup:main"
+bq_fix_basic = "bigquery_agents.bq_fix_basic.__main__:main"
+bq_fix = "bigquery_agents.bq_fix.__main__:main"
+bq_medic = "bigquery_agents.bq_medic:main"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
